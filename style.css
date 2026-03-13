@@ -1,4 +1,3 @@
-/* Plein écran et responsive */
 body, html {
     margin: 0;
     padding: 0;
@@ -8,7 +7,6 @@ body, html {
     font-family: Arial, sans-serif;
 }
 
-/* Vidéo en fond */
 #video {
     position: fixed;
     top: 0; left: 0;
@@ -18,10 +16,8 @@ body, html {
     z-index: -1;
 }
 
-/* Overlay pour les contrôles et menu */
 .overlay {
     position: absolute;
-    top: 0; left: 0;
     width: 100%;
     height: 100%;
     display: flex;
@@ -31,19 +27,18 @@ body, html {
     box-sizing: border-box;
 }
 
-/* Contrôles flottants */
 .controls {
     display: flex;
     justify-content: center;
-    gap: 20px;
+    align-items: center;
+    gap: 15px;
     background: rgba(0,0,0,0.5);
     padding: 10px 20px;
     border-radius: 30px;
-    align-items: center;
 }
 
 .controls button {
-    font-size: 28px;
+    font-size: 24px;
     color: white;
     background: none;
     border: none;
@@ -58,37 +53,41 @@ body, html {
     width: 150px;
 }
 
-/* Menu de playlist */
 .menu {
     position: fixed;
-    top: 20px;
-    right: 20px;
-    background: rgba(0,0,0,0.6);
-    padding: 15px;
-    border-radius: 10px;
-    max-width: 200px;
-}
-
-.menu h3 {
-    margin: 0 0 10px 0;
-    text-align: center;
-    color: #fff;
+    top: 20%;
+    left: 50%;
+    transform: translateX(-50%);
+    background: rgba(0,0,0,0.9);
+    padding: 20px;
+    border-radius: 15px;
+    display: none;
+    max-width: 300px;
 }
 
 .menu ul {
     list-style: none;
     padding: 0;
-    margin: 0;
+    margin: 0 0 10px 0;
 }
 
 .menu li {
-    padding: 8px;
-    color: white;
-    cursor: pointer;
+    padding: 10px;
     border-bottom: 1px solid #333;
+    cursor: pointer;
+    color: white;
     transition: 0.2s;
 }
 
 .menu li:hover {
     background: #1db954;
+}
+
+#close-menu {
+    background: #1db954;
+    border: none;
+    padding: 8px 12px;
+    color: white;
+    cursor: pointer;
+    border-radius: 5px;
 }
