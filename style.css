@@ -2,36 +2,37 @@ body {
     margin: 0;
     padding: 0;
     background-color: #111;
-    display: flex;
-    justify-content: center;
-    align-items: center;
-    height: 100vh;
+    color: white;
     font-family: Arial, sans-serif;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+}
+
+h1 {
+    margin: 20px 0;
 }
 
 .player-container {
+    width: 90%;
+    max-width: 900px;
     position: relative;
-    width: 80%;
-    max-width: 800px;
 }
 
 video {
     width: 100%;
+    height: auto;
     border-radius: 15px;
     box-shadow: 0 0 20px rgba(0,0,0,0.7);
+    background: black;
 }
 
 .controls {
-    position: absolute;
-    bottom: 15px;
-    left: 50%;
-    transform: translateX(-50%);
     display: flex;
+    justify-content: center;
     align-items: center;
     gap: 15px;
-    background-color: rgba(0,0,0,0.5);
-    padding: 10px 20px;
-    border-radius: 20px;
+    margin-top: 10px;
 }
 
 button {
@@ -48,4 +49,28 @@ button:hover {
 
 input[type="range"] {
     cursor: pointer;
+}
+
+.menu {
+    margin-top: 30px;
+    width: 90%;
+    max-width: 600px;
+    background: rgba(0,0,0,0.5);
+    padding: 15px;
+    border-radius: 10px;
+}
+
+.menu ul {
+    list-style: none;
+    padding: 0;
+}
+
+.menu li {
+    padding: 10px;
+    cursor: pointer;
+    border-bottom: 1px solid #333;
+}
+
+.menu li:hover {
+    background: #222;
 }
