@@ -8,18 +8,18 @@ const playlistMenu = document.getElementById('playlist-menu');
 const videoMenu = document.getElementById('video-menu');
 const closeMenu = document.getElementById('close-menu');
 
-// Playlist avec liens directs
+// Playlist avec liens directs (vidéo + son)
 const playlist = [
-    { title: "Musique 1", src: "https://image2url.com/r2/default/videos/1773437816996-cc370507-aed6-4b0b-88f7-c5a37e451d24.mp4" },
-    { title: "Musique 2", src: "https://files.catbox.moe/zwwfjh.mp4" }
+    { title: "Musique Lapin", src: "https://files.catbox.moe/zwwfjh.mp4" },
+    { title: "Musique Ours", src: "https://files.catbox.moe/abcd123.mp4" } // remplacer par le vrai lien
 ];
 
 let current = 0;
 let history = [];
 
-// Charger vidéo
+// Charger vidéo + son
 function loadVideo(index) {
-    if (current !== index) history.push(current); // enregistrer précédente
+    if(current !== index) history.push(current);
     current = index;
     video.src = playlist[index].src;
     video.play();
@@ -40,13 +40,12 @@ playBtn.addEventListener('click', () => {
 // Volume
 volumeSlider.addEventListener('input', () => video.volume = volumeSlider.value);
 
-// Bouton précédent (avec historique)
+// Bouton précédent
 prevBtn.addEventListener('click', () => {
     if(history.length > 0){
         const last = history.pop();
         loadVideo(last);
     } else {
-        // si pas d'historique, recommence la vidéo courante
         video.currentTime = 0;
     }
 });
@@ -57,10 +56,10 @@ nextBtn.addEventListener('click', () => {
     loadVideo(current);
 });
 
-// Quand la vidéo se termine, passer automatiquement à la suivante
+// Auto next quand la vidéo se termine
 video.addEventListener('ended', () => nextBtn.click());
 
-// Ouvrir/fermer menu
+// Menu Playlist
 menuBtn.addEventListener('click', () => playlistMenu.style.display = 'block');
 closeMenu.addEventListener('click', () => playlistMenu.style.display = 'none');
 
