@@ -10,7 +10,7 @@ const closeMenu = document.getElementById('close-menu');
 
 // Playlist avec liens directs
 const playlist = [
-    { title: "Musique 1", src: "https://files.catbox.moe/zwwfjh.mp4" },
+    { title: "Musique 1", src: "https://image2url.com/r2/default/videos/1773437816996-cc370507-aed6-4b0b-88f7-c5a37e451d24.mp4" },
     { title: "Musique 2", src: "https://files.catbox.moe/zwwfjh.mp4" }
 ];
 
