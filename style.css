@@ -1,4 +1,3 @@
-/* Plein écran et vidéo en fond */
 body, html {
     margin: 0;
     padding: 0;
@@ -17,7 +16,6 @@ body, html {
     z-index: -1;
 }
 
-/* Overlay pour contrôles et menu */
 .overlay {
     position: absolute;
     width: 100%;
@@ -26,7 +24,7 @@ body, html {
     box-sizing: border-box;
 }
 
-/* Contrôles bas de page */
+/* Contrôles bas */
 .controls {
     position: absolute;
     bottom: 20px;
@@ -56,7 +54,7 @@ body, html {
     width: 150px;
 }
 
-/* Bouton menu en haut à droite */
+/* Bouton menu en haut */
 #menu-btn {
     position: absolute;
     top: 20px;
