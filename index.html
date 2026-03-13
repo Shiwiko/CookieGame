@@ -11,14 +11,18 @@
 <video id="video" autoplay muted></video>
 
 <div class="overlay">
+    <!-- Contrôles principaux -->
     <div class="controls">
         <button id="prev">⏮️</button>
         <button id="play">▶️</button>
         <button id="next">⏭️</button>
-        <button id="playlist-btn">🎵 Playlist</button>
         <input type="range" id="volume" min="0" max="1" step="0.01" value="0.5">
     </div>
 
+    <!-- Bouton menu en haut à droite -->
+    <button id="menu-btn">🎵 Playlist</button>
+
+    <!-- Menu flottant -->
     <div class="menu" id="playlist-menu">
         <h3>Choisir une musique</h3>
         <ul id="video-menu"></ul>
