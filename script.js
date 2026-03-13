@@ -10,8 +10,8 @@ const closeMenu = document.getElementById('close-menu');
 
 // Playlist
 const playlist = [
-    { title: "Musique 1", src: "https://www.w3schools.com/html/mov_bbb.mp4" },
-    { title: "Musique 2", src: "https://www.w3schools.com/html/movie.mp4" }
+    { title: "Musique 1", src: "https://files.catbox.moe/zwwfjh.mp4" },
+    { title: "Musique 2", src: "https://files.catbox.moe/zwwfjh.mp4" }
 ];
 
 let current = 0;
