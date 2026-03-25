@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Cookie Clicker - Shiwiko v45.2</title>
+    <title>Cookie Clicker - Shiwiko v45.0</title>
     <style>
         :root { 
             --neon: #00f2ff; --purple: #bc13fe; --gold: #f1c40f; --crit: #ff3131; --online: #2ecc71; --dev: #ff00ea; 
@@ -34,6 +34,220 @@
 <body>
 
 <div class="box">
+    <div id="login-ui">
+        <h2 style="color:var(--neon)">COOKIE GAME</h2>
+        <input type="text" id="user" placeholder="Pseudo">
+        <input type="password" id="pass" placeholder="Mot de passe">
+        <button class="btn" onclick="login()">CONNEXION / REJOINDRE</button>
+        <span class="link-sub" onclick="forgotPassword()">MOT DE PASSE OUBLIÉ ?</span>
+    </div>
+
+    <div id="game-ui" style="display:none">
+        <button class="trophy-btn" onclick="toggleLeaderboard()">🏆 TOP</button>
+        <div id="u-name"><span id="player-profile-render"></span></div>
+        <div class="big-score" id="score">0 🍪</div>
+        <div class="cookie-container" id="cookie-area" style="position:relative;">
+            <img src="https://i.postimg.cc/SKB3hNDg/cookie-9181659-1280.png" class="pixel-cookie" onclick="handleClick()">
+        </div>
+        <button id="daily-btn" class="daily-btn" onclick="claimDaily()">🎁 CADEAU QUOTIDIEN</button>
+        <span style="color:var(--online); font-size:11px; cursor:pointer;" onclick="importSave()">📥 CHARGER CODE</span>
+        
+        <div class="shop"><span><b>FORCE (x<span id="m-lvl">1</span>)</b></span><button class="btn" style="width:110px" onclick="buy('m')">UP (<span id="m-cost">10</span>)</button></div>
+        <div class="shop"><span><b>AUTO (<span id="a-lvl">0</span>/s)</b></span><button class="btn" style="width:110px" onclick="buy('a')">BUY (<span id="a-cost">50</span>)</button></div>
+        
+        <button id="admin-panel" class="admin-btn" style="display:none;" onclick="adminAction()">⚙️ PANEL ADMIN</button>
+        <span class="link-sub" onclick="location.reload()">🚪 DÉCONNEXION</span>
+    </div>
+</div>
+
+<div id="leader-modal" class="modal">
+    <div class="modal-content"><span class="close-btn" onclick="toggleLeaderboard()">×</span><h2 style="color:var(--gold)">CLASSEMENT</h2><div id="leaderboard-list"></div></div>
+</div>
+
+<script>
+    let player = { n: "", pw: "", s: 0, m: 1, a: 0, lastDaily: 0, badgeTitle: "", titleType: "", banned: false, gifts: 0, recovery: "" };
+    const VERSION = "cyber_v45_"; 
+    const icons = {"ytb":"🎥","stm":"📡","pub":"📢","giveaway":"🎉","friend":"🤝","owner":"👑"};
+    const MASTER = "SHIWIKO"; 
+
+    function formatNum(num) {
+        if (num < 1000) return Math.floor(num);
+        const units = ["k", "M", "B", "T"];
+        let i = -1; do { num /= 1000; i++; } while (num >= 1000 && i < 3);
+        return num.toFixed(1).replace(/\.0$/, '') + units[i];
+    }
+    function parseKMBT(str) {
+        const match = str.toString().trim().match(/^([0-9.]+)([kmbt]?)$/i);
+        if (!match) return parseFloat(str) || 0;
+        const mult = { k: 1e3, m: 1e6, b: 1e9, t: 1e12 };
+        return parseFloat(match[1]) * (mult[match[2].toLowerCase()] || 1);
+    }
+    
+    function getCostM() { return Math.round(10 * Math.pow(1.15, player.m - 1)); }
+    function getCostA() { return Math.round(50 * Math.pow(1.20, player.a)); }
+
+    function save() { localStorage.setItem(VERSION + player.n, JSON.stringify(player)); }
+
+    function login() {
+        let u = document.getElementById('user').value.trim().toUpperCase();
+        let pw = document.getElementById('pass').value.trim().toUpperCase();
+        if(!u || !pw) return alert("Remplis tout !");
+        let saved = localStorage.getItem(VERSION + u);
+        if(saved) {
+            let data = JSON.parse(saved);
+            if(data.pw !== pw) return alert("Mot de passe incorrect");
+            if(data.banned) return alert("BANNI !");
+            player = data;
+        } else { player.n = u; player.pw = pw; save(); }
+        start();
+    }
+
+    // FONCTION RECUPERATION MOT DE PASSE
+    function forgotPassword() {
+        let u = prompt("PSEUDO DU COMPTE À RÉCUPÉRER :").toUpperCase().trim();
+        let saved = localStorage.getItem(VERSION + u);
+        if(!saved) return alert("Joueur inexistant.");
+        let data = JSON.parse(saved);
+        
+        let code = prompt("ENTRE LE CODE DE RÉCUPÉRATION (DONNÉ PAR L'ADMIN) :");
+        if(code && code === data.recovery) {
+            let newPw = prompt("CODE VALIDE ! ENTRE TON NOUVEAU MOT DE PASSE :").toUpperCase().trim();
+            if(newPw) {
+                data.pw = newPw;
+                data.recovery = ""; // On efface le code après usage
+                localStorage.setItem(VERSION + u, JSON.stringify(data));
+                alert("Mot de passe mis à jour ! Connecte-toi.");
+            }
+        } else {
+            alert("Code incorrect.");
+        }
+    }
+
+    function start() {
+        document.getElementById('login-ui').style.display = 'none';
+        document.getElementById('game-ui').style.display = 'block';
+        if(player.n === MASTER) document.getElementById('admin-panel').style.display = 'block';
+        
+        setInterval(() => { 
+            if(player.a > 0){ player.s += player.a; spawnText(player.a, "var(--purple)", true); } 
+            updateUI(); updateDailyTimer(); save(); 
+        }, 1000);
+        updateLeaderboard();
+    }
+
+    function handleClick() { 
+        player.s += player.m; 
+        spawnText(player.m, "var(--neon)", false);
+        updateUI(); save(); 
+    }
+
+    function spawnText(val, color, isAuto) {
+        const area = document.getElementById('cookie-area');
+        const text = document.createElement('div');
+        text.className = 'click-float';
+        text.style.color = color;
+        text.innerText = "+" + formatNum(val);
+        if(isAuto) { text.style.left = "40%"; text.style.top = "30%"; } 
+        else { text.style.left = (Math.random() * 60 + 20) + "%"; text.style.top = "40%"; }
+        area.appendChild(text);
+        setTimeout(() => text.remove(), 800);
+    }
+
+    function buy(type) {
+        if(type === 'm' && player.s >= getCostM()) { player.s -= getCostM(); player.m++; }
+        if(type === 'a' && player.s >= getCostA()) { player.s -= getCostA(); player.a++; }
+        updateUI(); save();
+    }
+
+    function updateUI() {
+        document.getElementById('score').innerText = formatNum(player.s) + " 🍪";
+        document.getElementById('m-lvl').innerText = formatNum(player.m);
+        document.getElementById('a-lvl').innerText = formatNum(player.a);
+        document.getElementById('m-cost').innerText = formatNum(getCostM());
+        document.getElementById('a-cost').innerText = formatNum(getCostA());
+        document.getElementById('player-profile-render').innerHTML = generateTagHTML(player);
+    }
+
+    function generateTagHTML(p) {
+        let dev = (p.n === MASTER) ? `<span class="dev-tag">[DEV]</span>` : "";
+        let bSpan = p.badgeTitle ? `<span class="tag-${p.badgeTitle}">[${icons[p.badgeTitle]}]</span>` : "";
+        let gSpan = p.gifts > 0 ? `<span class="gift-count">[🎁${p.gifts}]</span>` : "";
+        return `<span class="${p.n === MASTER ?'is-dev':''}">${p.n}</span>${dev}${bSpan}${gSpan}`;
+    }
+
+    function updateLeaderboard() {
+        let all = [];
+        for(let i=0; i<localStorage.length; i++) {
+            if(localStorage.key(i).startsWith(VERSION)) {
+                let p = JSON.parse(localStorage.getItem(localStorage.key(i)));
+                if(!p.banned) all.push(p);
+            }
+        }
+        all.sort((a,b) => b.s - a.s);
+        document.getElementById('leaderboard-list').innerHTML = all.slice(0,20).map((p, i) => 
+            `<div style="margin:5px 0; display:flex; justify-content:space-between;"><span>#${i+1} ${generateTagHTML(p)}</span><b>${formatNum(p.s)}</b></div>`
+        ).join('');
+    }
+
+    function toggleLeaderboard() {
+        const modal = document.getElementById('leader-modal');
+        modal.style.display = (modal.style.display === 'flex') ? 'none' : 'flex';
+        if(modal.style.display === 'flex') updateLeaderboard();
+    }
+
+    function adminAction() {
+        let cible = prompt("🎯 PSEUDO DU JOUEUR ?").toUpperCase().trim();
+        if(!cible) return;
+        let data = JSON.parse(localStorage.getItem(VERSION + cible));
+        if(!data) return alert("❌ Joueur inconnu");
+
+        let action = prompt("1:GIFT | 2:RESET | 3:STATS | 4:TITRE | 5:BAN | 6:EXPORT | 7:GENÉRER CODE RÉCUP | 0:QUIT");
+        switch(action) {
+            case "1": data.s += parseKMBT(prompt("Combien ?")); data.gifts = (data.gifts || 0) + 1; break;
+            case "2": data.s = 0; data.gifts = 0; break;
+            case "3": data.m = parseInt(prompt("Force ?", data.m)); data.a = parseInt(prompt("Auto ?", data.a)); break;
+            case "4": data.badgeTitle = prompt("Badge (ytb, stm, pub, giveaway, friend, owner)"); break;
+            case "5": data.banned = !data.banned; break;
+            case "6": prompt("CODE SAVE:", "SHI-" + btoa(JSON.stringify(data))); break;
+            case "7": 
+                let codeGen = Math.random().toString(36).substring(2, 8).toUpperCase();
+                data.recovery = codeGen;
+                prompt("DONNE CE CODE AU JOUEUR :", codeGen);
+                break;
+        }
+        localStorage.setItem(VERSION + cible, JSON.stringify(data));
+        if(cible === player.n) { player = data; updateUI(); }
+        updateLeaderboard();
+    }
+
+    function importSave() {
+        let code = prompt("COLLE TON CODE :");
+        if(!code) return;
+        try {
+            let data = JSON.parse(atob(code.replace("SHI-", "")));
+            if(player.n !== "" && data.n !== player.n) return alert("Ce code appartient à " + data.n);
+            player = data; save(); updateUI(); alert("Chargé !");
+        } catch(e) { alert("Code mort."); }
+    }
+
+    function claimDaily() {
+        if(Date.now() - player.lastDaily >= 86400000) {
+            let r = 5000 * player.m; player.s += r; player.lastDaily = Date.now();
+            spawnText(r, "var(--gold)", false); updateUI(); save();
+        }
+    }
+
+    function updateDailyTimer() {
+        let btn = document.getElementById('daily-btn');
+        let remain = 86400000 - (Date.now() - player.lastDaily);
+        if(remain > 0) {
+            let h = Math.floor(remain/3600000); let m = Math.floor((remain%3600000)/60000);
+            btn.innerText = `${h}H ${m}M RESTANT`; btn.disabled = true;
+        } else { btn.innerText = "🎁 CADEAU QUOTIDIEN"; btn.disabled = false; }
+    }
+</script>
+</body>
+</html>
     <div id="login-ui">
         <h2 style="color:var(--neon)">COOKIE GAME</h2>
         <input type="text" id="user" placeholder="Pseudo">
