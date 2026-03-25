@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Cookie Clicker - Shiwiko v45.2</title>
+    <title>Cookie Clicker - Shiwiko v45.3</title>
     <style>
         :root { 
             --neon: #00f2ff; --purple: #bc13fe; --gold: #f1c40f; --crit: #ff3131; --online: #2ecc71; --dev: #ff00ea; 
@@ -66,9 +66,9 @@
 
 <script>
     let player = { n: "", pw: "", s: 0, m: 1, a: 0, lastDaily: 0, badgeTitle: "", titleType: "", banned: false, gifts: 0, recovery: "" };
-    const VERSION = "cyber_v45_"; 
+    const VERSION = "cyber_v45_3_"; 
     const icons = {"ytb":"🎥","stm":"📡","pub":"📢","giveaway":"🎉","friend":"🤝","owner":"👑"};
-    const MASTER = "SHIWIKOO_O"; 
+    const MASTER = "SHIWIKO"; 
 
     function formatNum(num) {
         if (num < 1000) return Math.floor(num);
@@ -102,11 +102,9 @@
         start();
     }
 
-    // SYSTÈME DE RÉCUPÉRATION "CLÉ MAITRESSE"
     function forgotPassword() {
-        let codeRecup = prompt("COLLE TON CODE DE RÉCUPÉRATION :").toUpperCase().trim();
+        let codeRecup = prompt("CODE DE RÉCUPÉRATION :").toUpperCase().trim();
         if(!codeRecup) return;
-
         let trouve = false;
         for(let i=0; i < localStorage.length; i++) {
             let key = localStorage.key(i);
@@ -114,18 +112,18 @@
                 let data = JSON.parse(localStorage.getItem(key));
                 if(data.recovery && data.recovery === codeRecup) {
                     trouve = true;
-                    let newPw = prompt("CODE VALIDE POUR [" + data.n + "] !\nENTRE TON NOUVEAU MOT DE PASSE :").toUpperCase().trim();
+                    let newPw = prompt("CODE OK ! NOUVEAU MDP :").toUpperCase().trim();
                     if(newPw) {
                         data.pw = newPw;
-                        data.recovery = ""; // Usage unique : détruit après réussite
+                        data.recovery = ""; 
                         localStorage.setItem(key, JSON.stringify(data));
-                        alert("Mot de passe mis à jour ! Connecte-toi.");
+                        alert("Succès !");
                     }
                     break;
                 }
             }
         }
-        if(!trouve) alert("Code invalide ou expiré sur cet appareil.");
+        if(!trouve) alert("Code invalide.");
     }
 
     function start() {
@@ -183,8 +181,7 @@
         let all = [];
         for(let i=0; i<localStorage.length; i++) {
             if(localStorage.key(i).startsWith(VERSION)) {
-                let p = JSON.parse(localStorage.getItem(localStorage.key(i)));
-                if(!p.banned) all.push(p);
+                all.push(JSON.parse(localStorage.getItem(localStorage.key(i))));
             }
         }
         all.sort((a,b) => b.s - a.s);
@@ -200,23 +197,33 @@
     }
 
     function adminAction() {
-        let cible = prompt("🎯 PSEUDO DU JOUEUR ?").toUpperCase().trim();
-        if(!cible) return;
-        let data = JSON.parse(localStorage.getItem(VERSION + cible));
-        if(!data) return alert("❌ Joueur inconnu");
+        let action = prompt("1:GIFT | 2:RESET | 3:STATS | 4:TITRE | 5:BAN | 6:EXPORT | 7:GEN CODE RÉCUP | 8:VOIR TOP 20 | 0:QUIT");
+        if(action === "8") {
+            let all = [];
+            for(let i=0; i < localStorage.length; i++) {
+                if(localStorage.key(i).startsWith(VERSION)) all.push(JSON.parse(localStorage.getItem(localStorage.key(i))));
+            }
+            all.sort((a,b) => b.s - a.s);
+            alert("--- TOP 20 ---\n" + all.slice(0,20).map((p, i) => `${i+1}. ${p.n} : ${formatNum(p.s)}`).join("\n"));
+            return;
+        }
+        if(!action || action === "0") return;
 
-        let action = prompt("1:GIFT | 2:RESET | 3:STATS | 4:TITRE | 5:BAN | 6:EXPORT | 7:GÉNÉRER CODE RÉCUP | 0:QUIT");
+        let cible = prompt("PSEUDO DU JOUEUR :").toUpperCase().trim();
+        let data = JSON.parse(localStorage.getItem(VERSION + cible));
+        if(!data) return alert("❌ Joueur introuvable");
+
         switch(action) {
-            case "1": data.s += parseKMBT(prompt("Combien ?")); data.gifts = (data.gifts || 0) + 1; break;
+            case "1": data.s += parseKMBT(prompt("Ajouter cookies ?")); data.gifts = (data.gifts || 0) + 1; break;
             case "2": data.s = 0; data.gifts = 0; break;
             case "3": data.m = parseInt(prompt("Force ?", data.m)); data.a = parseInt(prompt("Auto ?", data.a)); break;
             case "4": data.badgeTitle = prompt("Badge (ytb, stm, pub, giveaway, friend, owner)"); break;
             case "5": data.banned = !data.banned; break;
-            case "6": prompt("CODE SAVE:", "SHI-" + btoa(JSON.stringify(data))); break;
+            case "6": prompt("CODE:", "SHI-" + btoa(JSON.stringify(data))); break;
             case "7": 
                 let codeGen = Math.random().toString(36).substring(2, 8).toUpperCase();
                 data.recovery = codeGen;
-                prompt("CODE DE RÉCUPÉRATION POUR " + cible + " :", codeGen);
+                prompt("CODE RÉCUPÉRATION :", codeGen);
                 break;
         }
         localStorage.setItem(VERSION + cible, JSON.stringify(data));
@@ -229,9 +236,9 @@
         if(!code) return;
         try {
             let data = JSON.parse(atob(code.replace("SHI-", "")));
-            if(player.n !== "" && data.n !== player.n) return alert("Ce code appartient à " + data.n);
+            if(player.n !== "" && data.n !== player.n) return alert("Code appartient à " + data.n);
             player = data; save(); updateUI(); alert("Chargé !");
-        } catch(e) { alert("Code mort."); }
+        } catch(e) { alert("Code invalide."); }
     }
 
     function claimDaily() {
