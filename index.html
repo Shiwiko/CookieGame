@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Cookie Clicker - Shiwiko v44.0</title>
+    <title>Cookie Clicker - Shiwiko v45.1</title>
     <style>
         :root { 
             --neon: #00f2ff; --purple: #bc13fe; --gold: #f1c40f; --crit: #ff3131; --online: #2ecc71; --dev: #ff00ea; 
@@ -16,11 +16,8 @@
         .big-score { font-size: 45px; font-weight: 900; text-shadow: 0 0 20px var(--neon); margin: 15px 0; display: flex; align-items: center; justify-content: center; gap: 10px; }
         .pixel-cookie { width: 150px; height: 150px; filter: drop-shadow(0 0 15px var(--neon)); cursor: pointer; transition: transform 0.05s; outline: none; -webkit-tap-highlight-color: transparent; }
         .pixel-cookie:active { transform: scale(1.15); }
-        
-        /* ANIMATION DES CLICKS */
         .click-float { position: absolute; font-weight: 900; pointer-events: none; animation: floatUp 0.8s forwards; z-index: 100; font-size: 22px; text-shadow: 0 0 8px rgba(0,0,0,0.8); }
         @keyframes floatUp { 0% { transform: translateY(0) scale(1); opacity: 1; } 100% { transform: translateY(-130px) scale(1.2); opacity: 0; } }
-        
         .modal { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.9); backdrop-filter: blur(10px); z-index: 1000; justify-content: center; align-items: center; }
         .modal-content { width: 330px; background: #0f111a; border: 2px solid var(--purple); border-radius: 25px; padding: 25px; text-align: center; position: relative; max-height: 80vh; overflow-y: auto; }
         .close-btn { position: absolute; top: 15px; right: 20px; font-size: 28px; cursor: pointer; color: white; }
@@ -28,7 +25,7 @@
         .shop { background: rgba(255,255,255,0.03); padding: 12px; border-radius: 18px; margin-top: 10px; font-size: 13px; display: flex; justify-content: space-between; align-items: center; border: 1px solid rgba(255,255,255,0.1); }
         input { width: 100%; padding: 14px; margin: 10px 0; border-radius: 12px; border: 1px solid #333; background: #000; color: #fff; box-sizing: border-box; text-transform: uppercase; }
         .admin-btn { background: #ff3131; color: white; font-size: 11px; padding: 10px; border-radius: 10px; border: 1px solid white; margin-top: 10px; cursor: pointer; width: 100%; font-weight: bold; }
-        .logout-link { color: #888; font-size: 10px; cursor: pointer; text-decoration: underline; margin-top: 10px; display: block; }
+        .link-sub { color: #888; font-size: 10px; cursor: pointer; text-decoration: underline; margin-top: 10px; display: block; }
         .gift-count { color: var(--gold); font-weight: bold; }
         .dev-tag { color: var(--dev); font-weight: bold; } .is-dev { color: var(--gold) !important; font-weight: bold !important; }
         .daily-btn { background: linear-gradient(45deg, var(--gold), #d4af37); color: black; border: none; padding: 14px; border-radius: 15px; cursor: pointer; width: 100%; margin: 15px 0 5px 0; font-weight: 900; }
@@ -42,6 +39,7 @@
         <input type="text" id="user" placeholder="Pseudo">
         <input type="password" id="pass" placeholder="Mot de passe">
         <button class="btn" onclick="login()">CONNEXION / REJOINDRE</button>
+        <span class="link-sub" onclick="forgotPassword()">MOT DE PASSE OUBLIÉ ?</span>
     </div>
 
     <div id="game-ui" style="display:none">
@@ -53,12 +51,10 @@
         </div>
         <button id="daily-btn" class="daily-btn" onclick="claimDaily()">🎁 CADEAU QUOTIDIEN</button>
         <span style="color:var(--online); font-size:11px; cursor:pointer;" onclick="importSave()">📥 CHARGER CODE</span>
-        
         <div class="shop"><span><b>FORCE (x<span id="m-lvl">1</span>)</b></span><button class="btn" style="width:110px" onclick="buy('m')">UP (<span id="m-cost">10</span>)</button></div>
         <div class="shop"><span><b>AUTO (<span id="a-lvl">0</span>/s)</b></span><button class="btn" style="width:110px" onclick="buy('a')">BUY (<span id="a-cost">50</span>)</button></div>
-        
         <button id="admin-panel" class="admin-btn" style="display:none;" onclick="adminAction()">⚙️ PANEL ADMIN</button>
-        <span class="logout-link" onclick="location.reload()">🚪 DÉCONNEXION</span>
+        <span class="link-sub" onclick="location.reload()">🚪 DÉCONNEXION</span>
     </div>
 </div>
 
@@ -67,8 +63,8 @@
 </div>
 
 <script>
-    let player = { n: "", pw: "", s: 0, m: 1, a: 0, lastDaily: 0, badgeTitle: "", titleType: "", banned: false, gifts: 0 };
-    const VERSION = "cyber_v44_"; 
+    let player = { n: "", pw: "", s: 0, m: 1, a: 0, lastDaily: 0, badgeTitle: "", titleType: "", banned: false, gifts: 0, recovery: "" };
+    const VERSION = "cyber_v45_"; 
     const icons = {"ytb":"🎥","stm":"📡","pub":"📢","giveaway":"🎉","friend":"🤝","owner":"👑"};
     const MASTER = "SHIWIKO"; 
 
@@ -104,17 +100,33 @@
         start();
     }
 
+    function forgotPassword() {
+        let u = prompt("PSEUDO DU COMPTE :").toUpperCase().trim();
+        if(!u) return;
+        let saved = localStorage.getItem(VERSION + u);
+        if(!saved) return alert("Joueur inexistant.");
+        let data = JSON.parse(saved);
+        
+        if(!data.recovery) return alert("Aucun code de récupération actif pour ce compte. Contacte l'admin Shiwiko.");
+
+        let code = prompt("ENTRE LE CODE RÉCUPÉRATION :").toUpperCase().trim();
+        if(code === data.recovery) {
+            let newPw = prompt("CODE VALIDE ! NOUVEAU MOT DE PASSE :").toUpperCase().trim();
+            if(newPw) {
+                data.pw = newPw;
+                data.recovery = ""; // UTILISATION UNIQUE : ON EFFACE LE CODE
+                localStorage.setItem(VERSION + u, JSON.stringify(data));
+                alert("Récupération réussie ! Tu peux te connecter.");
+            }
+        } else { alert("Code incorrect."); }
+    }
+
     function start() {
         document.getElementById('login-ui').style.display = 'none';
         document.getElementById('game-ui').style.display = 'block';
         if(player.n === MASTER) document.getElementById('admin-panel').style.display = 'block';
-        
-        // BOUCLE AUTO-CLICK
         setInterval(() => { 
-            if(player.a > 0){ 
-                player.s += player.a; 
-                spawnText(player.a, "var(--purple)", true); // TRUE = AUTO (VIOLET)
-            } 
+            if(player.a > 0){ player.s += player.a; spawnText(player.a, "var(--purple)", true); } 
             updateUI(); updateDailyTimer(); save(); 
         }, 1000);
         updateLeaderboard();
@@ -122,7 +134,7 @@
 
     function handleClick() { 
         player.s += player.m; 
-        spawnText(player.m, "var(--neon)", false); // FALSE = MANUEL (BLEU NEON)
+        spawnText(player.m, "var(--neon)", false);
         updateUI(); save(); 
     }
 
@@ -132,16 +144,8 @@
         text.className = 'click-float';
         text.style.color = color;
         text.innerText = "+" + formatNum(val);
-        
-        // Position : Si c'est auto, c'est au milieu, si c'est click c'est un peu aléatoire
-        if(isAuto) {
-            text.style.left = "40%";
-            text.style.top = "30%";
-        } else {
-            text.style.left = (Math.random() * 60 + 20) + "%";
-            text.style.top = "40%";
-        }
-        
+        if(isAuto) { text.style.left = "40%"; text.style.top = "30%"; } 
+        else { text.style.left = (Math.random() * 60 + 20) + "%"; text.style.top = "40%"; }
         area.appendChild(text);
         setTimeout(() => text.remove(), 800);
     }
@@ -194,15 +198,19 @@
         let data = JSON.parse(localStorage.getItem(VERSION + cible));
         if(!data) return alert("❌ Joueur inconnu");
 
-        let action = prompt("1:GIFT | 2:RESET | 3:STATS | 4:TITRE | 5:BAN | 6:EXPORT | 7:MDP | 0:QUIT");
+        let action = prompt("1:GIFT | 2:RESET | 3:STATS | 4:TITRE | 5:BAN | 6:EXPORT | 7:GÉNÉRER CODE RÉCUP | 0:QUIT");
         switch(action) {
             case "1": data.s += parseKMBT(prompt("Combien ?")); data.gifts = (data.gifts || 0) + 1; break;
             case "2": data.s = 0; data.gifts = 0; break;
             case "3": data.m = parseInt(prompt("Force ?", data.m)); data.a = parseInt(prompt("Auto ?", data.a)); break;
             case "4": data.badgeTitle = prompt("Badge (ytb, stm, pub, giveaway, friend, owner)"); break;
             case "5": data.banned = !data.banned; break;
-            case "6": prompt("CODE:", "SHI-" + btoa(JSON.stringify(data))); break;
-            case "7": let pw = prompt("Nouveau MDP :"); if(pw) data.pw = pw.toUpperCase(); break;
+            case "6": prompt("CODE SAVE:", "SHI-" + btoa(JSON.stringify(data))); break;
+            case "7": 
+                let codeGen = Math.random().toString(36).substring(2, 8).toUpperCase();
+                data.recovery = codeGen;
+                prompt("CODE DE RÉCUPÉRATION POUR " + cible + " :", codeGen);
+                break;
         }
         localStorage.setItem(VERSION + cible, JSON.stringify(data));
         if(cible === player.n) { player = data; updateUI(); }
@@ -237,4 +245,3 @@
 </script>
 </body>
 </html>
-
